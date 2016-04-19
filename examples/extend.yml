@@ -1,0 +1,6 @@
+---
+languages:
+  c:
+    clang:
+      flags:
+        - -lcrypt
