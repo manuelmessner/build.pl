@@ -1,0 +1,331 @@
+---
+default:
+  mode: release
+  inc_cmd: cincs.pl
+  command_file: run.sh
+  makefile: Makefile
+  extend: extend.yml
+  replace: replace.yml
+  verbose: true
+  outfile: main
+  buildonly: false
+  runonly: false
+  priority:
+    # prefer these rules over shebang
+    - rules
+    # prefer shebang over these rules
+    - shebang
+
+languages:
+  ####################
+  # script languages #
+  ####################
+  bash:
+    filetype: sh
+    run: /bin/bash $FILES
+  dash:
+    filetype: sh
+    run: /bin/dash $FILES
+  fish:
+    filetype: fish
+    run: /bin/fish $FILES
+  haskell:
+    filetype: hs
+    run: /usr/bin/ghc $FILES
+  javascript:
+    filetype: js
+    run: /usr/bin/node $FILES
+  lua:
+    filetype: lua
+    run: /usr/bin/lua $FILES
+  perl:
+    filetype: pl
+    run: /usr/bin/perl $FILES
+  php:
+    filetype: php
+    # run: /usr/bin/php
+    run: /opt/lampp/bin/php $FILES
+  pure:
+    filetype: pure
+    run: /usr/bin/pure $FILES
+  python:
+    filetype: py
+    run:
+      debug: /usr/bin/ipython -i $FILES
+      release: /usr/bin/python $FILES
+  python2:
+    filetype: py
+    run:
+      debug: /usr/bin/ipython2 -i $FILES
+      release: /usr/bin/python $FILES
+  python3:
+    filetype: py
+    run:
+      debug: /usr/bin/ipython3 -i $FILES
+      release: /usr/bin/python $FILES
+  ipython:
+    filetype: py
+    run:
+      debug: /usr/bin/ipython -i $FILES
+      release: /usr/bin/python $FILES
+  ipython2:
+    filetype: py
+    run:
+      debug: /usr/bin/ipython2 -i $FILES
+      release: /usr/bin/python $FILES
+  ipython3:
+    filetype: py
+    run:
+      debug: /usr/bin/ipython3 -i $FILES
+      release: /usr/bin/python $FILES
+  racket:
+    filetype: rkt
+    run: /usr/bin/racket $FILES
+  ruby:
+    filetype: rb
+    run: /usr/bin/ruby $FILES
+  scheme:
+    filetype: scm
+    run: /usr/bin/csi $FILES
+  sent:
+    filetype: sent
+    run: /usr/bin/sent $FILES
+  sh:
+    filetype: sh
+    run: /bin/sh $FILES
+  svg:
+    filetype: svg
+    run: /usr/bin/feh --draw-filename --scale-down --magick-timeout=0 $FILES
+
+  ######################
+  # compiled languages #
+  ######################
+  c:
+    filetype: c
+    method: clang
+    # method: gcc
+
+    clang:
+      includes: true
+      build:
+        debug: $METHOD $FLAGS -O0 -DDEBUG -ggdb $FILES
+        release: $METHOD $FLAGS -Oz -DRELEASE -s $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -std=gnu11
+        - -march=native
+        - -o $OUTFILE
+
+        - -Wall
+        - -Wextra
+        - -pedantic-errors
+
+        - -Wformat=2
+        - -Winit-self
+        - -Wmissing-include-dirs
+        - -Wuninitialized
+        - -Wstrict-overflow=5
+        - -Wfloat-equal
+        - -Wpointer-arith
+        - -Wbad-function-cast
+        - -Wcast-qual
+        - -Wcast-align
+        - -Wwrite-strings
+        - -Wconversion
+        - -Waggregate-return
+        - -Wstrict-prototypes
+        - -Wold-style-definition
+        - -Wpacked
+        - -Wredundant-decls
+        - -Wnested-externs
+        - -Winline
+        - -Wvla
+        - -Wdisabled-optimization
+        - -Wstack-protector
+
+        - -fstrict-aliasing
+        - -fdiagnostics-color
+        - -fstack-protector
+
+    gcc:
+      includes: true
+      build:
+        debug: $METHOD $FLAGS -Og -DDEBUG -ggdb $FILES
+        release: $METHOD $FLAGS -O2 -DRELEASE -s $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -std=gnu11
+        - -march=native
+        - -o $OUTFILE
+
+        - -Wall
+        - -Wextra
+        - -pedantic-errors
+
+        - -Wdouble-promotion
+        - -Wformat=2
+        - -Winit-self
+        - -Wmissing-include-dirs
+        - -Wuninitialized
+        - -Wstrict-overflow=5
+        - -Wsuggest-attribute=pure
+        - -Wsuggest-attribute=const
+        - -Wsuggest-attribute=noreturn
+        - -Wsuggest-attribute=format
+        - -Wfloat-equal
+        - -Wtraditional-conversion
+        - -Wunsafe-loop-optimizations
+        - -Wpointer-arith
+        - -Wbad-function-cast
+        - -Wcast-qual
+        - -Wcast-align
+        - -Wwrite-strings
+        - -Wconversion
+        - -Wjump-misses-init
+        - -Wlogical-op
+        - -Waggregate-return
+        - -Wstrict-prototypes
+        - -Wold-style-definition
+        - -Wpacked
+        - -Wpacked-bitfield-compat
+        - -Wpadded
+        - -Wredundant-decls
+        - -Wnested-externs
+        - -Winline
+        - -Wvector-operation-performance
+        - -Wvla
+        - -Wdisabled-optimization
+        - -Wno-missing-field-initializer
+        - -Wstack-protector
+
+        - -fstrict-aliasing
+        - -fdiagnostics-color
+        - -fstack-protector
+
+  cpp:
+    filetype: cpp
+    method: clang++
+
+    clang++:
+      includes: true
+      build:
+        debug: $METHOD $FLAGS -O0 -DDEBUG -ggdb $FILES
+        release: $METHOD $FLAGS -O2 -DRELEASE -s $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -std=gnu++11
+        - -march=native
+        - -o $OUTFILE
+
+        - -Wall
+        - -Wextra
+        - -pedantic-errors
+
+    g++:
+      includes: true
+      build:
+        debug: $METHOD $FLAGS -O0 -DDEBUG -ggdb $FILES
+        release: $METHOD $FLAGS -O2 -DRELEASE -s $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -std=gnu++11
+        - -march=native
+        - -o $OUTFILE
+
+        - -Wall
+        - -Wextra
+        - -pedantic-errors
+
+  d:
+    filetype: d
+    method: dub
+
+    dmd:
+      includes: true
+      build:
+        debug: $METHOD $FLAGS -debug -of$OUTFILE $FILES
+        release: $METHOD $OUTFILE -release -inline -of$OUTFILE $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -color
+        - -m64
+    dub:
+      includes: false
+      build:
+        debug: $METHOD build --build=debug
+        release: $METHOD build --build=release
+      run:
+        debug: $METHOD run
+        release: $METHOD run
+
+
+  nim:
+    filetype: nim
+    method: nim
+
+    nim:
+      includes: false
+      build:
+        debug: $METHOD $FLAGS --define:debug --debuginfo --debugger:native --lineDir:on compile $FILES
+        release: $METHOD $FLAGS --define:release --deadCodeElim:on --opt:speed compile $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - --cc:clang
+        - --verbosity:3
+        - --out:$OUTFILE
+
+
+  pdf:
+    filetype: md
+    method: pandoc
+
+    pandoc:
+      build:
+        debug: pandoc $FLAGS $FILES
+        release: pandoc $FLAGS $FILES
+      run:
+        debug: zathura ./$OUTFILE.pdf
+        release: zathura ./$OUTFILE.pdf
+      flags:
+        - --from=markdown+simple_tables+table_captions+pipe_tables+yaml_metadata_block+definition_lists+footnotes+inline_notes
+        - --filter pandoc-crossref
+        - --filter pandoc-citeproc
+        - --latex-engine=pdflatex
+        - --output=$OUTFILE.pdf
+
+
+  rust:
+    filetype: rs
+    method: cargo
+
+    rustc:
+      includes: false
+      build:
+        debug: $METHOD $FLAGS $FILES
+        release: $METHOD $FLAGS  $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - --crate-name $OUTFILE
+
+    cargo:
+      includes: false
+      build:
+        debug: $METHOD build
+        release: $METHOD build --release
+      run:
+        debug: $METHOD run
+        release: $METHOD run --release
