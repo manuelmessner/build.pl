@@ -17,7 +17,7 @@
 # along with build.pl.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# includes: {{{
+# includes {{{
 use feature qw(postderef postderef_qq say);
 use strict;
 use utf8;
@@ -31,8 +31,8 @@ use Text::ParseWords;
 use YAML;
 # }}}
 
-# utils: defined_and_true, linev, slurp {{{
-sub defined_and_true($) {
+# utils: is_true, linev, slurp {{{
+sub is_true($) {
     return defined $_[0] && $_[0] eq 'true';
 }
 
@@ -62,8 +62,9 @@ sub parse_args($) {
     my ($cfg) = @_;
 
     my $arg_parser  = Getopt::ArgParse->new_parser(
-        proc => 'build',
-        description => 'Builds and runs projects',
+        proc           => 'build',
+        description    => 'Builds and runs projects',
+        parser_configs => ["no_ignore_case"],
     );
     $arg_parser->add_args([
             '--language', '-l',
@@ -71,8 +72,11 @@ sub parse_args($) {
             help => 'Disable language auto detection and use the given one',
         ], [
             '--mode', '-m',
-            choices => [qw(debug release)],
+            choices => [qw(d debug r release)],
             help => 'Specify build mode'
+        ], [
+            '--out-file', '-o',
+            help => 'Specify and use an alternative output filename',
         ], [
             '--interactive', '-i',
             type => 'Bool',
@@ -85,16 +89,16 @@ sub parse_args($) {
             type => 'Bool',
             help => 'Do not use the command file if it exists',
         ], [
-            '--extend-definitions', '-e',
+            '--extend-definitions', '-E',
             help => 'Extend predefinitions with rules from given file',
         ], [
-            '--replace-definitions', '-r',
+            '--replace-definitions', '-R',
             help => 'Replace predefinitions with rules from given file',
         ], [
             '--makefile',
             help => 'Specify and use given alternative makefile instead of predefinitions',
         ], [
-            '--no-makefile',
+            '--no-makefile', '-n',
             type => 'Bool',
             help => 'Do not use the Makefile if it exists',
         ], [
@@ -106,38 +110,53 @@ sub parse_args($) {
             type => 'Bool',
             help => 'No additional output - only output from executed file',
         ], [
-            'file',
-            required => 1,
-            help => '(Start) file to build and execute'
-        ], [
-            '--build-only',
+            '--build-only', '-b',
             type => 'Bool',
             help => 'Just build the application and do not run it',
         ], [
-            '--run-only',
+            '--run-only', '-r',
             type => 'Bool',
             help => 'Just run the application and do not build it',
-        ]
+        ], [
+            '--method', '-M',
+            help => 'Specify and use given method to build/run instead of predefinitions',
+        ], [
+            'file',
+            help => 'File to build and/or execute'
+        ],
     );
 
+    my @oldargs = @ARGV;
     my $args = $arg_parser->parse_args;
+    my %modes = (
+        d       => 'debug',
+        r       => 'release',
+        debug   => 'debug',
+        release => 'release',
+    );
 
-    $cfg->{default}->{mode} = $args->mode if defined $args->mode;
-    $cfg->{default}->{verbose} = 'true' if $args->verbose;
+    $cfg->{default}->{outfile} = $args->out_file if defined $args->out_file;
+    $cfg->{default}->{mode} = $modes{$args->mode} if defined $args->mode;
+    $cfg->{default}->{verbose} = 'true'  if $args->verbose;
     $cfg->{default}->{verbose} = 'false' if $args->silent;
     $cfg->{default}->{command_file} = $args->command_file
             if defined $args->command_file;
     $cfg->{default}->{command_file} = '' if $args->no_command_file;
     $cfg->{default}->{makefile} = $args->makefile if defined $args->makefile;
-    $cfg->{default}->{makefile} = '' if $args->no_makefile;
+    $cfg->{default}->{makefile} = ''              if $args->no_makefile;
     $cfg->{default}->{extend} = $args->extend_definitions
             if defined $args->extend_definitions;
     $cfg->{default}->{replace} = $args->replace_definitions
             if defined $args->replace_definitions;
-    $cfg->{default}->{buildonly} = 'true' if $args->build_only;
-    $cfg->{default}->{buildonly} = 'false' if $args->run_only;
-    $cfg->{default}->{runonly} = 'true' if $args->run_only;
-    $cfg->{default}->{runonly} = 'false' if $args->build_only;
+    $cfg->{default}->{buildonly}   = 'true'  if $args->build_only;
+    $cfg->{default}->{buildonly}   = 'false' if $args->run_only;
+    $cfg->{default}->{runonly}     = 'true'  if $args->run_only;
+    $cfg->{default}->{runonly}     = 'false' if $args->build_only;
+    $cfg->{default}->{interactive} = 'true'  if $args->interactive;
+    $cfg->{default}->{verbose}     = 'false' if $args->interactive;
+
+    $cfg->{default}->{_method} = $args->method if defined $args->method;
+    $cfg->{default}->{_args} = [$arg_parser->argv];
 
     return $args;
 }
@@ -223,24 +242,40 @@ sub get_filetype($$$) {
 }
 # }}}
 
-# includes: get_includes {{{
+# includes: get_includes, get_subcmd {{{
 sub get_includes($$$) {
     my ($cfg, $filetype, $fpath) = @_;
     my @files = qx($cfg->{default}->{inc_cmd} "$filetype" "$fpath");
     chomp @files;
     return @files;
 }
+
+sub get_subcmd($$) {
+    my ($cfg, $tpl) = @_;
+
+    while ($tpl =~ /(\$\((.*?)\))/) {
+        logi "SubCmd:   $2" if is_true $cfg->{default}->{verbose};
+
+        my $out = qx($2);
+        chomp $out;
+
+        $tpl =~ s/\Q$1\E/$out/g;
+    }
+
+    return $tpl;
+}
 # }}}
 
 # execute: execute, get_system_cmd {{{
 sub get_system_cmd($$$$@) {
     my ($cfg, $tpl, $lang, $rules, @files) = @_;
-    $tpl =~ s/\$METHOD/$lang->{method}/g;
 
     $tpl =~ s/\$METHOD/$lang->{method}/g;
     $tpl =~ s/\$FLAGS/$rules->{flags}->@*/g;
     $tpl =~ s/\$OUTFILE/"$cfg->{default}->{outfile}"/g;
     $tpl =~ s/\$FILES/@files/g;
+
+    $tpl = get_subcmd($cfg, $tpl);
 
     my @tmp = shellwords $tpl;
     return {
@@ -249,12 +284,22 @@ sub get_system_cmd($$$$@) {
     };
 }
 
-sub execute($$$) {
-    my ($cfg, $cmd, $msg, $stdout, $stderr) = @_;
-    if ($cfg->{default}->{verbose} eq 'true') {
+sub execute($$$;$) {
+    my ($cfg, $cmd, $msg, $no_args) = @_;
+    my ($stdout, $stderr);
+    my (@cases, $ret, $sig);
+
+    push $cmd->{args}->@*, $cfg->{default}->{_args}->@* unless $no_args;
+
+    if (is_true $cfg->{default}->{verbose}) {
         logi sprintf('%-9s', ucfirst $msg . ':'),
              $cmd->{cmd},
              $cmd->{args}->@*;
+    }
+
+    if ($cfg->{default}->{interactive}) {
+        system $cmd->{cmd}, $cmd->{args}->@*;
+        goto out;
     }
 
     capture sub {
@@ -262,44 +307,62 @@ sub execute($$$) {
     } => \$stdout, \$stderr;
     chomp $stdout, chomp $stderr;
 
-    my $line = "\033[0m${\linev 1}";
-    $stdout =~ s/^/$line /gm, logs "Stdout:\n$stdout" if $stdout;
-    $stderr =~ s/^/$line /gm, logw "Stderr:\n$stderr" if $stderr;
+    if (is_true $cfg->{default}->{verbose}) {
+        my $line = "\033[0m${\linev 1}";
+        $stdout =~ s/^/$line /gm, logs "Stdout:\n$stdout" if $stdout;
+        $stderr =~ s/^/$line /gm, logw "Stderr:\n$stderr" if $stderr;
+    } else {
+        say $stdout if $stdout;
+        say $stderr if $stderr;
+    }
 
-    return $? >> 8;
+out:
+    $sig = $? & 127;
+    $ret = $? >> 8;
+
+    @cases = $sig ? (\&loge, 'Signal:   ' . $sig, 2) :
+             $ret ? (\&loge, 'Return:   ' . $ret, 1) :
+                    (\&logs, 'Return:   ' . $ret, 0);
+    $cases[0]->($cases[1]) if is_true $cfg->{default}->{interactive};
+
+    return $cases[2];
 }
 # }}}
 
 # main: main {{{
 sub main($) {
     my $cfg = Load(scalar slurp shift);
+    my $args = parse_args $cfg;
 
     # merge extend and replace file
     if (-e $cfg->{default}->{extend}) {
-        if ($cfg->{default}->{verbose} eq 'true') {
+        if (is_true $cfg->{default}->{verbose}) {
             logi 'Ext-File: found';
         }
         merge_hashes $cfg, Load(scalar slurp $cfg->{default}->{extend});
     } elsif (-e $cfg->{default}->{replace}) {
-        if ($cfg->{default}->{verbose} eq 'true') {
+        if (is_true $cfg->{default}->{verbose}) {
             logi 'Rep-File: found';
         }
         my $tmp = Load(scalar slurp $cfg->{default}->{replace});
         merge_hashes $cfg, $tmp, 'replace';
     }
 
-    my $args = parse_args $cfg;
-
     # run command_file or makefile instead of normal build process
     if (-e $cfg->{default}->{command_file}) {
-        my $tmp = {cmd => "./$cfg->{default}->{command_file}", args => []};
-        return execute $cfg, $tmp, 'Cmd-File';
+        my $cmd = {cmd  => "./$cfg->{default}->{command_file}", args => []};
+        return execute $cfg, $cmd, 'Cmd-File';
     } elsif (-e $cfg->{default}->{makefile}) {
-        my $tmp = {cmd => 'make', args => []};
-        return execute $cfg, $tmp, 'Makefile';
+        my $cmd = {cmd => 'make', args => []};
+        return execute $cfg, $cmd, 'Makefile';
     }
 
     # start normal build process
+    unless (defined $args->file) {
+        loge 'No file to build/execute defined!';
+        return 1;
+    }
+
     unless (-e $args->file) {
         loge 'Could not find file to execute!';
         return 1;
@@ -312,7 +375,7 @@ sub main($) {
         return 1;
     }
 
-    if ($cfg->{default}->{verbose} eq 'true') {
+    if (is_true $cfg->{default}->{verbose}) {
         logi 'Filename: ' . $args->file;
         logi 'Filetype: ' . $filetype;
         logi 'Mode:     ' . $cfg->{default}->{mode};
@@ -327,16 +390,20 @@ sub main($) {
     # priority is not defined or priority equals rules or shebang is not defined
     my $lang = $cfg->{languages}->{$filetype};
     my $mode = $cfg->{default}->{mode};
+
+    # a method was defined, check if rules for that method exist; if so use them
+    if (exists $cfg->{default}->{_method} and
+        exists $lang->{$cfg->{default}->{_method}}) {
+        $lang->{method} = $cfg->{default}->{_method};
+    }
+
     my $rules = exists $lang->{method} ? $lang->{$lang->{method}} : $lang;
 
 
     my @ops = qw(build run);
-    @ops = 'build' if defined_and_true $cfg->{default}->{buildonly};
-    @ops = 'run' if defined_and_true $cfg->{default}->{runonly};
+    is_true $cfg->{default}->{$_.'only'} and @ops = $_, last for @ops;
 
-    @ops = qw(build run);
-    defined_and_true $cfg->{default}->{$_.'only'} and @ops = $_, last for @ops;
-
+    my $ret = 0;
     for (@ops) {
         next unless exists $rules->{$_};
 
@@ -345,22 +412,26 @@ sub main($) {
         my $cmd = get_system_cmd $cfg, $tpl, $lang, $rules, $args->file;
 
         if ($_ eq 'build'
-                and defined_and_true $rules->{includes}
+                and is_true $rules->{includes}
                 and $cfg->{default}->{inc_cmd}) {
             push $cmd->{args}->@*, get_includes $cfg, $filetype, $args->file;
         }
 
-        my $ret = execute $cfg, $cmd, "Command";
-        ($ret == 0 ? \&logs : \&loge)->('Return:   ' . $ret);
-        return $ret if $_ eq 'run' or $_ eq 'build' and $ret != 0;
+        $ret = execute $cfg, $cmd, "Command", $_ eq 'build';
+        last if $ret != 0;
+        # return $ret if $_ eq 'run' or $_ eq 'build' and $ret != 0;
     }
+    return $ret;
 }
+
 # }}}
 
 my $cfg_file;
 -r $_ and $cfg_file = $_ and last for (
-    "$ENV{HOME}/.config/build/config.yml",
-    "$ENV{HOME}/.config/build/config.yaml",
+    "$ENV{HOME}/.config/skelett/build/config.yml",
+    "$ENV{HOME}/.config/skelett/build/config.yaml",
+    "$ENV{HOME}/.config/skelett/build.yml",
+    "$ENV{HOME}/.config/skelett/build.yaml",
     "$ENV{HOME}/.buildrc",
     '/etc/build.yml',
     '/etc/build.yaml',
