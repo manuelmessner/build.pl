@@ -71,6 +71,14 @@ sub parse_args($) {
             choices => [sort keys $cfg->{languages}->%*],
             help => 'Disable language auto detection and use the given one',
         ], [
+            '--debug',
+            type => 'Bool',
+            help => 'Build in debug mode (alternative for `-m debug`)',
+        ], [
+            '--release',
+            type => 'Bool',
+            help => 'Build in release mode (alternative for `-m release`)',
+        ], [
             '--mode', '-m',
             choices => [qw(d debug r release)],
             help => 'Specify build mode'
@@ -137,6 +145,8 @@ sub parse_args($) {
 
     $cfg->{default}->{outfile} = $args->out_file if defined $args->out_file;
     $cfg->{default}->{mode} = $modes{$args->mode} if defined $args->mode;
+    $cfg->{default}->{mode} = 'release' if $args->release;
+    $cfg->{default}->{mode} = 'debug' if $args->debug;
     $cfg->{default}->{verbose} = 'true'  if $args->verbose;
     $cfg->{default}->{verbose} = 'false' if $args->silent;
     $cfg->{default}->{command_file} = $args->command_file
