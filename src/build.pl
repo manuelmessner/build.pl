@@ -438,10 +438,10 @@ sub main($) {
 
 my $cfg_file;
 -r $_ and $cfg_file = $_ and last for (
-    "$ENV{HOME}/.config/skelett/build/config.yml",
-    "$ENV{HOME}/.config/skelett/build/config.yaml",
-    "$ENV{HOME}/.config/skelett/build.yml",
-    "$ENV{HOME}/.config/skelett/build.yaml",
+    "$ENV{HOME}/.config/build/config.yml",
+    "$ENV{HOME}/.config/build/config.yaml",
+    "$ENV{HOME}/.config/build.yml",
+    "$ENV{HOME}/.config/build.yaml",
     "$ENV{HOME}/.buildrc",
     '/etc/build.yml',
     '/etc/build.yaml',
