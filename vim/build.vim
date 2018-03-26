@@ -17,7 +17,7 @@ function! s:build(...)
 endfunction
 
 " command! -bar -nargs=? -complete=file Build call s:build(<f-args>)
-" command! -bar QBuild call s:build('quick')
-command! -bar -nargs=* -complete=file Build call s:build(<f-args>)
-command! -bar -nargs=* -complete=file RBuild call s:build('--mode release', <f-args>)
-command! -bar -nargs=* -complete=file DBuild call s:build('--mode debug', <f-args>)
+command! -bar -nargs=* Build call s:build(<f-args>)
+command! -bar QBuild call s:build('quick')
+command! -bar -nargs=* RBuild call s:build('--mode release', <f-args>)
+command! -bar -nargs=* DBuild call s:build('--mode debug', <f-args>)
