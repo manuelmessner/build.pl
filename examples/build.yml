@@ -38,9 +38,15 @@ languages:
   lua:
     filetype: lua
     run: /usr/bin/lua $FILES
+  moonscript:
+    filetype: moon
+    run: /home/skelett/.luarocks/bin/moon $FILES
   perl:
     filetype: pl
     run: /usr/bin/perl $FILES
+  perl6:
+    filetype: pl
+    run: /usr/bin/perl6 $FILES
   php:
     filetype: php
     # run: /usr/bin/php
@@ -51,33 +57,18 @@ languages:
   python:
     filetype: py
     run:
-      debug: /usr/bin/ipython -i $FILES
-      release: /usr/bin/python $FILES
+      debug: /usr/bin/ipython $FILES
+      release: /usr/bin/env python $FILES
   python2:
     filetype: py
     run:
-      debug: /usr/bin/ipython2 -i $FILES
-      release: /usr/bin/python $FILES
+      debug: /usr/bin/ipython2 $FILES
+      release: /usr/bin/env python2 $FILES
   python3:
     filetype: py
     run:
-      debug: /usr/bin/ipython3 -i $FILES
-      release: /usr/bin/python $FILES
-  ipython:
-    filetype: py
-    run:
-      debug: /usr/bin/ipython -i $FILES
-      release: /usr/bin/python $FILES
-  ipython2:
-    filetype: py
-    run:
-      debug: /usr/bin/ipython2 -i $FILES
-      release: /usr/bin/python $FILES
-  ipython3:
-    filetype: py
-    run:
-      debug: /usr/bin/ipython3 -i $FILES
-      release: /usr/bin/python $FILES
+      debug: /usr/bin/ipython3 $FILES
+      release: /usr/bin/env python3 $FILES
   racket:
     filetype: rkt
     run: /usr/bin/racket $FILES
@@ -86,7 +77,9 @@ languages:
     run: /usr/bin/ruby $FILES
   scheme:
     filetype: scm
-    run: /usr/bin/csi $FILES
+    run:
+      debug: /usr/bin/csi -sx $FILES
+      release: /usr/bin/csi -s $FILES
   sent:
     filetype: sent
     run: /usr/bin/sent $FILES
@@ -96,6 +89,9 @@ languages:
   svg:
     filetype: svg
     run: /usr/bin/feh --draw-filename --scale-down --magick-timeout=0 $FILES
+  uml:
+    filetype: uml
+    run: /usr/bin/plantuml -tpdf $FILES
 
   ######################
   # compiled languages #
@@ -109,7 +105,7 @@ languages:
       includes: true
       build:
         debug: $METHOD $FLAGS -O0 -DDEBUG -ggdb $FILES
-        release: $METHOD $FLAGS -Oz -DRELEASE -s $FILES
+        release: $METHOD $FLAGS -Oz -DRELEASE -DNDEBUG -s $FILES
       run:
         debug: ./$OUTFILE
         release: ./$OUTFILE
@@ -141,19 +137,23 @@ languages:
         - -Wredundant-decls
         - -Wnested-externs
         - -Winline
-        - -Wvla
         - -Wdisabled-optimization
         - -Wstack-protector
 
         - -fstrict-aliasing
         - -fdiagnostics-color
         - -fstack-protector
+        - -Wno-gnu-auto-type
+        - -Wno-gnu-statement-expression
+        - -Wno-missing-field-initializers
+        - -fblocks
+        - -lm
 
     gcc:
       includes: true
       build:
         debug: $METHOD $FLAGS -Og -DDEBUG -ggdb $FILES
-        release: $METHOD $FLAGS -O2 -DRELEASE -s $FILES
+        release: $METHOD $FLAGS -O2 -DRELEASE -DNDEBUG -s $FILES
       run:
         debug: ./$OUTFILE
         release: ./$OUTFILE
@@ -184,7 +184,6 @@ languages:
         - -Wcast-qual
         - -Wcast-align
         - -Wwrite-strings
-        - -Wconversion
         - -Wjump-misses-init
         - -Wlogical-op
         - -Waggregate-return
@@ -197,14 +196,10 @@ languages:
         - -Wnested-externs
         - -Winline
         - -Wvector-operation-performance
-        - -Wvla
         - -Wdisabled-optimization
-        - -Wno-missing-field-initializer
-        - -Wstack-protector
 
         - -fstrict-aliasing
         - -fdiagnostics-color
-        - -fstack-protector
 
   cpp:
     filetype: cpp
@@ -219,7 +214,7 @@ languages:
         debug: ./$OUTFILE
         release: ./$OUTFILE
       flags:
-        - -std=gnu++11
+        - -std=gnu++14
         - -march=native
         - -o $OUTFILE
 
@@ -252,7 +247,7 @@ languages:
       includes: true
       build:
         debug: $METHOD $FLAGS -debug -of$OUTFILE $FILES
-        release: $METHOD $OUTFILE -release -inline -of$OUTFILE $FILES
+        release: $METHOD $FLAGS -release -inline -of$OUTFILE $FILES
       run:
         debug: ./$OUTFILE
         release: ./$OUTFILE
@@ -262,11 +257,26 @@ languages:
     dub:
       includes: false
       build:
-        debug: $METHOD build --build=debug
-        release: $METHOD build --build=release
+        debug: $METHOD build --build=debug --compiler=ldc
+        release: $METHOD build --build=release --compiler=ldc
       run:
         debug: $METHOD run
         release: $METHOD run
+
+
+  idris:
+    filetype: idr
+    method: idris
+
+    idris:
+      build:
+        debug: $METHOD $FLAGS $FILES
+        release: $METHOD $FLAGS $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -o $OUTFILE
 
 
   nim:
@@ -276,15 +286,18 @@ languages:
     nim:
       includes: false
       build:
-        debug: $METHOD $FLAGS --define:debug --debuginfo --debugger:native --lineDir:on compile $FILES
-        release: $METHOD $FLAGS --define:release --deadCodeElim:on --opt:speed compile $FILES
+        debug:   $METHOD $FLAGS --define:debug --debuginfo --debugger:native --lineDir:on --nilChecks:on compile $FILES
+        release: $METHOD $FLAGS --define:release --opt:size compile $FILES
       run:
-        debug: ./$OUTFILE
+        debug:   ./$OUTFILE
         release: ./$OUTFILE
       flags:
-        - --cc:clang
-        - --verbosity:3
+        - --path:/home/skelett/bin/lib/nim
+        - --nimcache:/tmp/nimcache
+        - --verbosity:2
+        - --colors:on
         - --out:$OUTFILE
+        - --define:ssl
 
 
   pdf:
@@ -299,10 +312,12 @@ languages:
         debug: zathura ./$OUTFILE.pdf
         release: zathura ./$OUTFILE.pdf
       flags:
-        - --from=markdown+simple_tables+table_captions+pipe_tables+yaml_metadata_block+definition_lists+footnotes+inline_notes
+        - --from=markdown+simple_tables+table_captions+pipe_tables+yaml_metadata_block+definition_lists+footnotes+inline_notes+abbreviations
+        - --variable=papersize:a4
         - --filter pandoc-crossref
         - --filter pandoc-citeproc
-        - --latex-engine=pdflatex
+        # - --pdf-engine=pdflatex
+        - --pdf-engine=xelatex
         - --output=$OUTFILE.pdf
 
 
@@ -319,13 +334,16 @@ languages:
         debug: ./$OUTFILE
         release: ./$OUTFILE
       flags:
+        - --crate-type bin
         - --crate-name $OUTFILE
 
     cargo:
       includes: false
       build:
-        debug: $METHOD build
-        release: $METHOD build --release
+        debug:   $METHOD build $FLAGS
+        release: $METHOD build $FLAGS --release
       run:
         debug: $METHOD run
         release: $METHOD run --release
+      flags:
+        - --color always
