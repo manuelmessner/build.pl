@@ -58,39 +58,43 @@ Currently supported in `cincs.pl`:
 ### build.pl:
 
 ```bash
-usage: build.pl FILE [--help|-h] [--run-only] [--build-only] [--silent|-s]
-                     [--verbose|-v] [--no-makefile] [--makefile] [--replace-definitions|-r]
-                     [--extend-definitions|-e] [--no-command-file] [--command-file|-f]
-                     [--interactive|-i] [--mode|-m] [--language|-l]
+usage: build [FILE] [--help|-h] [--method|-M] [--run-only|-r] [--build-only|-b]
+[--silent|-s] [--verbose|-v] [--no-makefile|-n] [--makefile]
+[--replace-definitions|-R] [--extend-definitions|-E] [--no-command-file]
+[--command-file|-f] [--interactive|-i] [--out-file|-o] [--mode|-m]
+[--language|-l]
 
 Builds and runs projects
 
-required positional arguments:
-  FILE            (Start) file to build and execute
+optional positional arguments:
+  FILE          ? File to build and/or execute
 
 optional named arguments:
   --help, -h                                       ? show this help message and exit
-  --run-only                                       ? Just run the application and do not build it
-  --build-only                                     ? Just build the application and do not run it
+  --method, -M METHOD                              ? Specify and use given method to build/run instead of
+                                                       predefinitions
+  --run-only, -r                                   ? Just run the application and do not build it
+  --build-only, -b                                 ? Just build the application and do not run it
   --silent, -s                                     ? No additional output - only output from executed file
   --verbose, -v                                    ? Verbose output
-  --no-makefile                                    ? Do not use the Makefile if it exists
+  --no-makefile, -n                                ? Do not use the Makefile if it exists
   --makefile MAKEFILE                              ? Specify and use given alternative makefile instead of
                                                        predefinitions
-  --replace-definitions, -r REPLACE-DEFINITIONS    ? Replace predefinitions with rules from given file
-  --extend-definitions, -e EXTEND-DEFINITIONS      ? Extend predefinitions with rules from given file
+  --replace-definitions, -R REPLACE-DEFINITIONS    ? Replace predefinitions with rules from given file
+  --extend-definitions, -E EXTEND-DEFINITIONS      ? Extend predefinitions with rules from given file
   --no-command-file                                ? Do not use the command file if it exists
   --command-file, -f COMMAND-FILE                  ? Specify and use given alternative command file instead of
                                                        predefinitions
   --interactive, -i                                ? Do not capture any output; allow interactive debugging
                                                        sessions
+  --out-file, -o OUT-FILE                          ? Specify and use an alternative output filename
   --mode, -m MODE                                  ? Specify build mode
-                                                       Choices: [debug, release], case sensitive
+                                                       Choices: [d, debug, r, release], case sensitive
   --language, -l LANGUAGE                          ? Disable language auto detection and use the given one
-                                                       Choices: [bash, c, cpp, d, dash, fish, haskell, ipython,
-                                                       ipython2, ipython3, javascript, lua, nim, pdf, perl, php,
-                                                       pure, python, python2, python3, racket, ruby, rust, scheme,
-                                                       sent, sh, svg], case sensitive
+                                                       Choices: [bash, c, cpp, d, dash, fish, haskell, idris,
+                                                       javascript, lua, moonscript, nim, pdf, perl, php, pure,
+                                                       python, python2, python3, racket, ruby, rust, scheme, sent,
+                                                       sh, svg, uml], case sensitive
 ```
 
 ### vim-plugin:
