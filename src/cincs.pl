@@ -25,9 +25,10 @@ use feature qw(state say);
 use Cwd qw(realpath);
 use File::Basename;
 
+
 my $g_cfg = {
     c => {
-        mark  => '^\s*#\s*include\s*"(.*?)\s*"$',
+        mark  => '^\s*#\s*include\s*"\s*(.*?)\s*"\s*$',
         subst => sub {
             local $_ = shift // $_;
             s/\.h$/.c/;
@@ -58,9 +59,11 @@ my $g_cfg = {
     },
 };
 
+
 my ($g_ft, $g_fpath) = @ARGV;
 die "usage: " . basename($0) . "<filetype> <file>\n" if not ($g_fpath && $g_ft);
 exit 0 unless exists $g_cfg->{$g_ft};
+
 
 sub uniq(@) {
     local %_;
@@ -81,8 +84,8 @@ sub get_includes {
 
     open my $f, $fpath or die "Could not open file: $fpath: $!\n";
     my @incs = map {
-        my $tmp = /$g_cfg->{$g_ft}->{mark}/ ? parse_inc $1 : undef;
-        $tmp ? realpath $tmp : ()
+        my $path = /$g_cfg->{$g_ft}->{mark}/ ? realpath parse_inc $1 : undef;
+        $path && $path ne $g_fpath ? $path : ();
     } <$f>;
     close $f;
 
@@ -91,5 +94,6 @@ sub get_includes {
 }
 
 
+$g_fpath = realpath $g_fpath;
 chdir dirname $g_fpath;
 say for get_includes $g_fpath;
