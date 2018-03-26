@@ -58,11 +58,11 @@ Currently supported in `cincs.pl`:
 ### build.pl:
 
 ```bash
-usage: build [FILE] [--help|-h] [--method|-M] [--run-only|-r] [--build-only|-b]
-[--silent|-s] [--verbose|-v] [--no-makefile|-n] [--makefile]
+usage: build.pl [FILE] [--help|-h] [--method|-M] [--run-only|-r]
+[--build-only|-b] [--silent|-s] [--verbose|-v] [--no-makefile|-n] [--makefile]
 [--replace-definitions|-R] [--extend-definitions|-E] [--no-command-file]
-[--command-file|-f] [--interactive|-i] [--out-file|-o] [--mode|-m]
-[--language|-l]
+[--command-file|-f] [--interactive|-i] [--out-file|-o] [--mode|-m] [--release]
+[--debug] [--language|-l]
 
 Builds and runs projects
 
@@ -90,6 +90,8 @@ optional named arguments:
   --out-file, -o OUT-FILE                          ? Specify and use an alternative output filename
   --mode, -m MODE                                  ? Specify build mode
                                                        Choices: [d, debug, r, release], case sensitive
+  --release                                        ? Build in release mode (alternative for `-m release`)
+  --debug                                          ? Build in debug mode (alternative for `-m debug`)
   --language, -l LANGUAGE                          ? Disable language auto detection and use the given one
                                                        Choices: [bash, c, cpp, d, dash, fish, haskell, idris,
                                                        javascript, lua, moonscript, nim, pdf, perl, php, pure,
