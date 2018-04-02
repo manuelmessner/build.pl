@@ -63,8 +63,25 @@ sub parse_args($) {
 
     my $arg_parser  = Getopt::ArgParse->new_parser(
         proc           => 'build',
-        description    => 'Builds and runs projects',
         parser_configs => ["no_ignore_case"],
+        help           => 'Builds and runs projects using predefined rules.',
+        description    => <<END,
+This application builds and runs project using a predefined ruleset.
+The rules have to be defined in a configuration files, located in one of the
+following places:
+'\$HOME/.config/build/config.yml',
+'\$HOME/.config/build/config.yaml',
+'\$HOME/.config/build.yml',
+'\$HOME/.config/build.yaml',
+'\$HOME/.buildrc',
+'/etc/build.yml',
+'/etc/build.yaml'.
+
+The return values are related to the to-be-build/to-be-executed application:
+0 indicates success,
+1 indicates failure and
+2 indicates a signal was received.
+END
     );
     $arg_parser->add_args([
             '--language', '-l',
@@ -218,10 +235,12 @@ sub get_shebang($) {
 # filetype: get_filetype {{{
 sub _guess_ft_by_ext($$) {
     my ($cfg, $fpath) = @_;
-    my $ext = (fileparse $fpath, qr/\..*?$/)[2];
+    my $ext = (fileparse $fpath, qr/\.[^.]*$/)[2];
     return undef if not $ext;
 
     my $type = substr $ext, 1;
+    return undef if not $type;
+
     my $langs = $cfg->{languages};
     return [grep { $langs->{$_}->{filetype} eq $type } keys %$langs] || undef;
 }
@@ -438,10 +457,10 @@ sub main($) {
 
 my $cfg_file;
 -r $_ and $cfg_file = $_ and last for (
-    "$ENV{HOME}/.config/build/config.yml",
-    "$ENV{HOME}/.config/build/config.yaml",
-    "$ENV{HOME}/.config/build.yml",
-    "$ENV{HOME}/.config/build.yaml",
+    "$ENV{HOME}/.config/skelett/build/config.yml",
+    "$ENV{HOME}/.config/skelett/build/config.yaml",
+    "$ENV{HOME}/.config/skelett/build.yml",
+    "$ENV{HOME}/.config/skelett/build.yaml",
     "$ENV{HOME}/.buildrc",
     '/etc/build.yml',
     '/etc/build.yaml',
