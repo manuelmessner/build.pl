@@ -352,7 +352,7 @@ out:
     @cases = $sig ? (\&loge, 'Signal:   ' . $sig, 2) :
              $ret ? (\&loge, 'Return:   ' . $ret, 1) :
                     (\&logs, 'Return:   ' . $ret, 0);
-    $cases[0]->($cases[1]) if is_true $cfg->{default}->{interactive};
+    $cases[0]->($cases[1]) unless is_true $cfg->{default}->{interactive};
 
     return $cases[2];
 }
