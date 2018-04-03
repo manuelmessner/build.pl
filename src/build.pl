@@ -466,4 +466,9 @@ my $cfg_file;
     '/etc/build.yaml',
 );
 
+unless (defined $cfg_file) {
+    loge "Could not find configuration file!";
+    exit 1;
+}
+
 exit main $cfg_file;
