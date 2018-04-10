@@ -83,7 +83,12 @@ The return values are related to the to-be-build/to-be-executed application:
 2 indicates a signal was received.
 END
     );
-    $arg_parser->add_args([
+    $arg_parser->add_args(
+        [
+            '--sudo',
+            type => 'Bool',
+            help => 'Run the application with superuser rights',
+        ], [
             '--language', '-l',
             choices => [sort keys $cfg->{languages}->%*],
             help => 'Disable language auto detection and use the given one',
@@ -180,6 +185,7 @@ END
     $cfg->{default}->{runonly}     = 'false' if $args->build_only;
     $cfg->{default}->{interactive} = 'true'  if $args->interactive;
     $cfg->{default}->{verbose}     = 'false' if $args->interactive;
+    $cfg->{default}->{sudo}        = 'true'  if $args->sudo;
 
     $cfg->{default}->{_method} = $args->method if defined $args->method;
     $cfg->{default}->{_args} = [$arg_parser->argv];
@@ -306,6 +312,14 @@ sub get_system_cmd($$$$@) {
     $tpl = get_subcmd($cfg, $tpl);
 
     my @tmp = shellwords $tpl;
+
+    if ($cfg->{default}->{sudo}) {
+        return {
+            cmd => 'sudo',
+            args => [@tmp],
+        }
+    }
+
     return {
         cmd => shift @tmp,
         args => [@tmp],
@@ -378,10 +392,11 @@ sub main($) {
 
     # run command_file or makefile instead of normal build process
     if (-e $cfg->{default}->{command_file}) {
-        my $cmd = {cmd  => "./$cfg->{default}->{command_file}", args => []};
+        my $tpl = "./$cfg->{default}->{command_file} \$FILES";
+        my $cmd = get_system_cmd $cfg, $tpl, '', '', $args->file // '';
         return execute $cfg, $cmd, 'Cmd-File';
     } elsif (-e $cfg->{default}->{makefile}) {
-        my $cmd = {cmd => 'make', args => []};
+        my $cmd = get_system_cmd $cfg, 'make $FILES', '', '', $args->file // '';
         return execute $cfg, $cmd, 'Makefile';
     }
 
