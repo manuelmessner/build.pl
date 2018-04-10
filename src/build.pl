@@ -151,7 +151,6 @@ END
         ],
     );
 
-    my @oldargs = @ARGV;
     my $args = $arg_parser->parse_args;
     my %modes = (
         d       => 'debug',
