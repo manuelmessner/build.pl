@@ -264,6 +264,24 @@ languages:
         release: $METHOD run
 
 
+  # TODO: test
+  go:
+    filetype: go
+    method: go
+
+    go:
+      includes: false
+
+      build:
+        debug: $METHOD build $FLAGS
+        release: $METHOD build $FLAGS
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -o $OUTFILE
+
+
   idris:
     filetype: idr
     method: idris
