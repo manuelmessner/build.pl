@@ -439,6 +439,10 @@ sub main($) {
     for (@ops) {
         next unless exists $rules->{$_};
 
+        if (is_true $cfg->{default}->{verbose}) {
+            logi 'Action:   ' . $_;
+        }
+
         # check if $rules->{$_} is a command or a hash containing commands
         my $tpl = !ref $rules->{$_} ? $rules->{$_} : $rules->{$_}->{$mode};
         my $cmd = get_system_cmd $cfg, $tpl, $lang, $rules, $args->file;
