@@ -87,12 +87,7 @@ Build offers a way to directly pass runtime arguments:
   build [option...] [file] [--] [rt_arg...]
 END
     );
-    $arg_parser->add_args(
-        [
-            '--sudo',
-            type => 'Bool',
-            help => 'Run the application with superuser rights',
-        ], [
+    $arg_parser->add_args([
             '--language', '-l',
             choices => [sort keys $cfg->{languages}->%*],
             help => 'Disable language auto detection and use the given one',
@@ -189,7 +184,6 @@ END
     $cfg->{default}->{runonly}     = 'false' if $args->build_only;
     $cfg->{default}->{interactive} = 'true'  if $args->interactive;
     $cfg->{default}->{verbose}     = 'false' if $args->interactive;
-    $cfg->{default}->{sudo}        = 'true'  if $args->sudo;
 
     $cfg->{default}->{_method} = $args->method if defined $args->method;
     $cfg->{default}->{_args} = [$arg_parser->argv];
@@ -316,14 +310,6 @@ sub get_system_cmd($$$$@) {
     $tpl = get_subcmd($cfg, $tpl);
 
     my @tmp = shellwords $tpl;
-
-    if ($cfg->{default}->{sudo}) {
-        return {
-            cmd => 'sudo',
-            args => [@tmp],
-        }
-    }
-
     return {
         cmd => shift @tmp,
         args => [@tmp],
@@ -396,11 +382,10 @@ sub main($) {
 
     # run command_file or makefile instead of normal build process
     if (-e $cfg->{default}->{command_file}) {
-        my $tpl = "./$cfg->{default}->{command_file} \$FILES";
-        my $cmd = get_system_cmd $cfg, $tpl, '', '', $args->file // '';
+        my $cmd = {cmd  => "./$cfg->{default}->{command_file}", args => []};
         return execute $cfg, $cmd, 'Cmd-File';
     } elsif (-e $cfg->{default}->{makefile}) {
-        my $cmd = get_system_cmd $cfg, 'make $FILES', '', '', $args->file // '';
+        my $cmd = {cmd => 'make', args => []};
         return execute $cfg, $cmd, 'Makefile';
     }
 
