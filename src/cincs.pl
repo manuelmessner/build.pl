@@ -47,7 +47,7 @@ my $g_cfg = {
         mark  => '^\s*import\s+(\S+).*;.*$',
         subst => sub {
             local $_ = shift // $_;
-            return undef if /^std\./;
+            return undef if /^(?:std|core|etc)\./;
             s/\./\//g;
             $_ .= '.d';
             return $_;
