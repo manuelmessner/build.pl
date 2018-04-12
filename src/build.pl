@@ -117,10 +117,12 @@ END
         ], [
             '--interactive', '-i',
             type => 'Bool',
-            help => 'Do not capture any output; allow interactive debugging sessions',
+            help => 'Do not capture any output; allow interactive debugging ' .
+                    'sessions',
         ], [
             '--command-file', '-f',
-            help => 'Specify and use given alternative command file instead of predefinitions',
+            help => 'Specify and use given alternative command file instead ' .
+                    'of predefinitions',
         ], [
             '--no-command-file',
             type => 'Bool',
@@ -133,7 +135,8 @@ END
             help => 'Replace predefinitions with rules from given file',
         ], [
             '--makefile',
-            help => 'Specify and use given alternative makefile instead of predefinitions',
+            help => 'Specify and use given alternative makefile instead of ' .
+                    'predefinitions',
         ], [
             '--no-makefile', '-n',
             type => 'Bool',
@@ -156,7 +159,8 @@ END
             help => 'Just run the application and do not build it',
         ], [
             '--method', '-M',
-            help => 'Specify and use given method to build/run instead of predefinitions',
+            help => 'Specify and use given method to build/run instead of ' .
+                    'predefinitions',
         ], [
             'file',
             help => 'File to build and/or execute'
