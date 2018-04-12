@@ -84,13 +84,21 @@ The return values are related to the to-be-build/to-be-executed application:
 
 Build offers a way to directly pass runtime arguments:
 
-  build [option...] [file] [--] [rt_arg...]
+  build [option...] file [--] [rt_arg...]
+  build [option...] -- -- [rt_arg...]
 END
     );
-    $arg_parser->add_args([
+    $arg_parser->add_args(
+        [
             '--language', '-l',
             choices => [sort keys $cfg->{languages}->%*],
             help => 'Disable language auto detection and use the given one',
+        ], [
+            '--sudo',
+            type => 'Bool',
+            help => 'If a build rule exists, run the built application with ' .
+                    'superuser privileges. Otherwise execute the given file ' .
+                    'with superuser privileges.'
         ], [
             '--debug',
             type => 'Bool',
@@ -184,6 +192,7 @@ END
     $cfg->{default}->{runonly}     = 'false' if $args->build_only;
     $cfg->{default}->{interactive} = 'true'  if $args->interactive;
     $cfg->{default}->{verbose}     = 'false' if $args->interactive;
+    $cfg->{default}->{sudo}        = 'true'  if $args->sudo;
 
     $cfg->{default}->{_method} = $args->method if defined $args->method;
     $cfg->{default}->{_args} = [$arg_parser->argv];
@@ -310,10 +319,12 @@ sub get_system_cmd($$$$@) {
     $tpl = get_subcmd($cfg, $tpl);
 
     my @tmp = shellwords $tpl;
+
     return {
-        cmd => shift @tmp,
+        cmd  => shift @tmp,
         args => [@tmp],
-    };
+        sudo => is_true $cfg->{default}->{sudo},
+    }
 }
 
 sub execute($$$;$) {
@@ -323,10 +334,15 @@ sub execute($$$;$) {
 
     push $cmd->{args}->@*, $cfg->{default}->{_args}->@* unless $no_args;
 
+    if ($cmd->{sudo}) {
+        unshift $cmd->{args}->@*, $cmd->{cmd};
+        $cmd->{cmd} = '/usr/bin/sudo';
+    }
+
     if (is_true $cfg->{default}->{verbose}) {
         logi sprintf('%-9s', ucfirst $msg . ':'),
-             $cmd->{cmd},
-             $cmd->{args}->@*;
+            $cmd->{cmd},
+            $cmd->{args}->@*;
     }
 
     if ($cfg->{default}->{interactive}) {
@@ -382,10 +398,10 @@ sub main($) {
 
     # run command_file or makefile instead of normal build process
     if (-e $cfg->{default}->{command_file}) {
-        my $cmd = {cmd  => "./$cfg->{default}->{command_file}", args => []};
+        my $cmd = get_system_cmd $cfg, "./$cfg->{default}->{command_file}", '', '';
         return execute $cfg, $cmd, 'Cmd-File';
     } elsif (-e $cfg->{default}->{makefile}) {
-        my $cmd = {cmd => 'make', args => []};
+        my $cmd = get_system_cmd $cfg, '/usr/bin/make', '', '';
         return execute $cfg, $cmd, 'Makefile';
     }
 
@@ -447,10 +463,13 @@ sub main($) {
         my $tpl = !ref $rules->{$_} ? $rules->{$_} : $rules->{$_}->{$mode};
         my $cmd = get_system_cmd $cfg, $tpl, $lang, $rules, $args->file;
 
-        if ($_ eq 'build'
-                and is_true $rules->{includes}
-                and $cfg->{default}->{inc_cmd}) {
-            push $cmd->{args}->@*, get_includes $cfg, $filetype, $args->file;
+        if ($_ eq 'build') {
+            # never build with superuser privileges!
+            $cmd->{sudo} = 0;
+
+            if (is_true $rules->{includes} and $cfg->{default}->{inc_cmd}) {
+                push $cmd->{args}->@*, get_includes $cfg, $filetype, $args->file;
+            }
         }
 
         $ret = execute $cfg, $cmd, "Command", $_ eq 'build';
