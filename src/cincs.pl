@@ -84,8 +84,9 @@ sub get_includes {
 
     open my $f, $fpath or die "Could not open file: $fpath: $!\n";
     my @incs = map {
-        my $path = /$g_cfg->{$g_ft}->{mark}/ ? realpath parse_inc $1 : undef;
-        $path && $path ne $g_fpath ? $path : ();
+        my $inc = /$g_cfg->{$g_ft}->{mark}/ ? parse_inc $1 : undef;
+        my $path = defined $inc ? realpath $inc : undef;
+        defined $path && $path ne $g_fpath ? $path : ();
     } <$f>;
     close $f;
 
