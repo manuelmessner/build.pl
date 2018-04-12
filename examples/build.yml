@@ -246,22 +246,41 @@ languages:
     dmd:
       includes: true
       build:
-        debug: $METHOD $FLAGS -debug -of$OUTFILE $FILES
-        release: $METHOD $FLAGS -release -inline -of$OUTFILE $FILES
+        debug: $METHOD $FLAGS -debug  $FILES
+        release: $METHOD $FLAGS -release -inline -m64 $FILES
       run:
         debug: ./$OUTFILE
         release: ./$OUTFILE
       flags:
         - -color
-        - -m64
+        - -of=$OUTFILE
+
+    ldc:
+      includes: true
+      build:
+        debug: $METHOD $FLAGS -debug $FILES
+        release: $METHOD $FLAGS -release -Oz -m64 $FILES
+      run:
+        debug: ./$OUTFILE
+        release: ./$OUTFILE
+      flags:
+        - -of=$OUTFILE
+        - -enable-color
+        - -llvm-color
+        - -link-defaultlib-shared=false
+        # - -static         # TODO
+
     dub:
       includes: false
       build:
-        debug: $METHOD build --build=debug --compiler=ldc
-        release: $METHOD build --build=release --compiler=ldc
+        debug: $METHOD build --build=debug $FLAGS
+        release: $METHOD build --build=release $FLAGS
       run:
         debug: $METHOD run
         release: $METHOD run
+      flags:
+        - --compiler=ldc
+        - --parallel
 
 
   # TODO: test
