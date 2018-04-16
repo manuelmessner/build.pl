@@ -175,29 +175,29 @@ END
         release => 'release',
     );
 
-    $cfg->{default}->{outfile} = $args->out_file if defined $args->out_file;
+    $cfg->{default}->{outfile} = $args->out_file  if defined $args->out_file;
     $cfg->{default}->{mode} = $modes{$args->mode} if defined $args->mode;
-    $cfg->{default}->{mode} = 'release' if $args->release;
-    $cfg->{default}->{mode} = 'debug' if $args->debug;
-    $cfg->{default}->{verbose} = 'true'  if $args->verbose;
-    $cfg->{default}->{verbose} = 'false' if $args->silent;
+    $cfg->{default}->{mode} = 'release'           if $args->release;
+    $cfg->{default}->{mode} = 'debug'             if $args->debug;
     $cfg->{default}->{command_file} = $args->command_file
-            if defined $args->command_file;
-    $cfg->{default}->{command_file} = '' if $args->no_command_file;
-    $cfg->{default}->{makefile} = $args->makefile if defined $args->makefile;
-    $cfg->{default}->{makefile} = ''              if $args->no_makefile;
-    $cfg->{default}->{extend}   = $args->extend   if defined $args->extend;
-    $cfg->{default}->{replace}  = $args->replace  if defined $args->replace;
+                                                  if defined $args->command_file;
+    $cfg->{default}->{command_file} = ''          if $args->no_command_file;
+    $cfg->{default}->{makefile}    = $args->makefile if defined $args->makefile;
+    $cfg->{default}->{makefile}    = ''              if $args->no_makefile;
+    $cfg->{default}->{extend}      = $args->extend   if defined $args->extend;
+    $cfg->{default}->{replace}     = $args->replace  if defined $args->replace;
     $cfg->{default}->{buildonly}   = 'true'  if $args->build_only;
     $cfg->{default}->{buildonly}   = 'false' if $args->run_only;
     $cfg->{default}->{runonly}     = 'true'  if $args->run_only;
     $cfg->{default}->{runonly}     = 'false' if $args->build_only;
+    $cfg->{default}->{verbose}     = 'true'  if $args->verbose;
+    $cfg->{default}->{verbose}     = 'false' if $args->silent;
     $cfg->{default}->{interactive} = 'true'  if $args->interactive;
     $cfg->{default}->{verbose}     = 'false' if $args->interactive;
     $cfg->{default}->{sudo}        = 'true'  if $args->sudo;
 
     $cfg->{default}->{_method} = $args->method if defined $args->method;
-    $cfg->{default}->{_args} = [$arg_parser->argv];
+    $cfg->{default}->{_args}   = [$arg_parser->argv];
 
     return $args;
 }
