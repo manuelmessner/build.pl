@@ -385,17 +385,17 @@ sub main($) {
     my $args = parse_args $cfg;
 
     # merge extend and replace file
-    if (-e $cfg->{default}->{extend}) {
-        if (is_true $cfg->{default}->{verbose}) {
-            logi 'Ext-File: found';
-        }
-        merge_hashes $cfg, Load(scalar slurp $cfg->{default}->{extend});
-    } elsif (-e $cfg->{default}->{replace}) {
+    if (-e $cfg->{default}->{replace}) {
         if (is_true $cfg->{default}->{verbose}) {
             logi 'Rep-File: found';
         }
         my $tmp = Load(scalar slurp $cfg->{default}->{replace});
         merge_hashes $cfg, $tmp, 'replace';
+    } elsif (-e $cfg->{default}->{extend}) {
+        if (is_true $cfg->{default}->{verbose}) {
+            logi 'Ext-File: found';
+        }
+        merge_hashes $cfg, Load(scalar slurp $cfg->{default}->{extend});
     }
 
     # run command_file or makefile instead of normal build process
