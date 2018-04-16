@@ -85,7 +85,8 @@ The return values are related to the to-be-build/to-be-executed application:
 Build offers a way to directly pass runtime arguments:
 
   build [option...] file [--] [rt_arg...]
-  build [option...] -- -- [rt_arg...]
+
+  build [option...] --    --  [rt_arg...]
 END
     );
     $arg_parser->add_args(
