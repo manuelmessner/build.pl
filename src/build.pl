@@ -100,11 +100,11 @@ END
                     'superuser privileges. Otherwise execute the given file ' .
                     'with superuser privileges.'
         ], [
-            '--debug',
+            '--debug', '-d',
             type => 'Bool',
             help => 'Build in debug mode (alternative for `-m debug`)',
         ], [
-            '--release',
+            '--release', '-r',
             type => 'Bool',
             help => 'Build in release mode (alternative for `-m release`)',
         ], [
@@ -128,10 +128,10 @@ END
             type => 'Bool',
             help => 'Do not use the command file if it exists',
         ], [
-            '--extend-definitions', '-E',
+            '--extend',
             help => 'Extend predefinitions with rules from given file',
         ], [
-            '--replace-definitions', '-R',
+            '--replace',
             help => 'Replace predefinitions with rules from given file',
         ], [
             '--makefile',
@@ -150,11 +150,11 @@ END
             type => 'Bool',
             help => 'No additional output - only output from executed file',
         ], [
-            '--build-only', '-b',
+            '--build-only', '-B',
             type => 'Bool',
             help => 'Just build the application and do not run it',
         ], [
-            '--run-only', '-r',
+            '--run-only', '-R',
             type => 'Bool',
             help => 'Just run the application and do not build it',
         ], [
@@ -186,10 +186,8 @@ END
     $cfg->{default}->{command_file} = '' if $args->no_command_file;
     $cfg->{default}->{makefile} = $args->makefile if defined $args->makefile;
     $cfg->{default}->{makefile} = ''              if $args->no_makefile;
-    $cfg->{default}->{extend} = $args->extend_definitions
-            if defined $args->extend_definitions;
-    $cfg->{default}->{replace} = $args->replace_definitions
-            if defined $args->replace_definitions;
+    $cfg->{default}->{extend}   = $args->extend   if defined $args->extend;
+    $cfg->{default}->{replace}  = $args->replace  if defined $args->replace;
     $cfg->{default}->{buildonly}   = 'true'  if $args->build_only;
     $cfg->{default}->{buildonly}   = 'false' if $args->run_only;
     $cfg->{default}->{runonly}     = 'true'  if $args->run_only;
